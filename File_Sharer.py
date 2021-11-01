@@ -46,12 +46,15 @@ while True:
 			trigger = True
 			host = args[2]
 		elif args[1].lower() == "port" and args[2]:
-			trigger = True
-			port = args[2]
-		if trigger:
-			print(f'{args[1].title()} was set to {args[2]}.')
+			if args[2].isnumeric():
+				port = int(args[2])
+				trigger = True
+			else:
+				print("That is not a valid port number.")
 		else:
 			print("Syntax Error, refer to HELP.")
+		if trigger:
+			print(f'{args[1].title()} was set to {args[2]}.')
 	elif user_input.lower() == 'server':
 		s = socket.socket()
 		while True:
@@ -71,3 +74,5 @@ while True:
 					f.write(bytes_read)
 			conn.close()
 			s.close()
+	else:
+		print(f"{user_input} is not a command. Maybe reference the HELP command?")
