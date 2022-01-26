@@ -1,7 +1,7 @@
 # File-Sharer
 Simple command line interface file sharing programing using the python sockets library.
 
-EXIT  :  exit the program\n
+EXIT  :  exit the program
 HELP  :  bring up this menu
 SHARE {PATH and FILE NAME}  : share filename with set host
 SET {OPTION} {INPUT}  : options are PORT and HOST
