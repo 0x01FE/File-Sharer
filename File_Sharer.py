@@ -1,3 +1,4 @@
+from zipfile import ZipFile
 import socket, os, configparser
 
 SEPARATOR = "<SEPARATOR>"
@@ -6,6 +7,16 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 host = config['SETTINGS']['HOST']
 port = int(config['SETTINGS']['PORT'])
+
+def get_all_file_paths(directory):
+	file_paths = []
+
+	for root, directories, files in os.walk(directory):
+		for filename in files:
+			filepath = os.path.join(root, filename)
+			file_paths.append(filepath)
+
+	return file_paths        
 
 
 while True:
@@ -17,31 +28,46 @@ while True:
 		print("""
 		EXIT  :  exit the program
 		HELP  :  bring up this menu
-		SHARE {PATH and FILE NAME}  : share filename with set host
+		SHARE {-z} {PATH and FILE NAME}  : share filename with set host
+			-z : zip the file
 		SET {OPTION} {INPUT}  : options are PORT and HOST
 		SERVER  :  set client to server mode (must use ctrl + c to end)
 		PRINT {OPTION}  :  options are PORT and HOST
 		""")
 	elif "share" in user_input:
-		args = user_input.split()
-		if os.path.exists(args[1]):
-			s = socket.socket()
-			try:
-				s.connect((host,port))
-			except ConnectionRefusedError:
-				print("Target IP / PORT were not listening")
-				continue
-			filesize = os.path.getsize(args[1])
-			s.send(f'{args[1]}{SEPARATOR}{filesize}'.encode())
-			with open(args[1], "rb") as f:
-				while True:
-					bytes_read = f.read(BUFFER_SIZE)
-					if not bytes_read:
-						break
-					s.sendall(bytes_read)
-			s.close()
+		args = user_input.split()x
+		if not len(args) > 1:
+			print("Error: no file path")
 		else:
-			print(f'{args[1]} does not exist.')
+			file_path = args[1]
+			if os.path.exists(file_path):
+				if "-z" in user_input:
+					if os.path.isdir(file_path):
+						with ZipFile('message.zip','w+') as z:
+							for item in get_all_file_paths(file_path):
+								z.write(item)
+					else:
+						with ZipFile('message.zip','w+') as z:
+							z.write(file_path)
+					file_path = 'message.zip'
+						
+				s = socket.socket()
+				try:
+					s.connect((host,port))
+				except ConnectionRefusedError:
+					print("Target IP / PORT were not listening")
+					continue
+				filesize = os.path.getsize(file_path)
+				s.send(f'{file_path}{SEPARATOR}{filesize}'.encode())
+				with open(file_path, "rb") as f:
+					while True:
+						bytes_read = f.read(BUFFER_SIZE)
+						if not bytes_read:
+							break
+						s.sendall(bytes_read)
+				s.close()
+			else:
+				print(f'{args[1]} does not exist or is not a valid file path.')
 	elif "set" in user_input:
 		trigger = False
 		args = user_input.split()
@@ -101,3 +127,5 @@ while True:
 				print("That is not a valid option, please refer to HELP.")
 	else:
 		print(f"{user_input} is not a command. Maybe reference the HELP command?")
+		
+		
