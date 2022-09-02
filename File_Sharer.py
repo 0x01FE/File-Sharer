@@ -1,7 +1,7 @@
 from zipfile import ZipFile
 import socket, os, configparser
 
-SEPARATOR = "<SEPARATOR>"
+
 BUFFER_SIZE = 4096
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -35,7 +35,7 @@ while True:
 		PRINT {OPTION}  :  options are PORT and HOST
 		""")
 	elif "share" in user_input:
-		args = user_input.split()x
+		args = user_input.split()
 		if not len(args) > 1:
 			print("Error: no file path")
 		else:
@@ -43,14 +43,13 @@ while True:
 			if os.path.exists(file_path):
 				if "-z" in user_input:
 					if os.path.isdir(file_path):
-						with ZipFile('message.zip','w+') as z:
+						with ZipFile('message.zip','w') as z:
 							for item in get_all_file_paths(file_path):
 								z.write(item)
 					else:
-						with ZipFile('message.zip','w+') as z:
+						with ZipFile('message.zip','w') as z:
 							z.write(file_path)
 					file_path = 'message.zip'
-						
 				s = socket.socket()
 				try:
 					s.connect((host,port))
@@ -58,7 +57,7 @@ while True:
 					print("Target IP / PORT were not listening")
 					continue
 				filesize = os.path.getsize(file_path)
-				s.send(f'{file_path}{SEPARATOR}{filesize}'.encode())
+				s.send(f'{file_path}'.encode())
 				with open(file_path, "rb") as f:
 					while True:
 						bytes_read = f.read(BUFFER_SIZE)
@@ -97,14 +96,15 @@ while True:
 				print(f'{args[1].title()} was set to {args[2]}.')
 	elif user_input == 'server':
 		s = socket.socket()
+		s.bind((host, port))
+		print("Entering server mode.")
 		while True:
-			s.bind((host, port))
-			print(f"Entering server mode.\nListening on {host}:{port}.")
+			print(f"[*] Listening on {host}:{port}.")
 			s.listen()
 			conn, addr = s.accept()
 			print(f"{addr} is connected.")
 			received = conn.recv(BUFFER_SIZE).decode('latin-1')
-			filename, filesize = received.split(SEPARATOR)
+			filename = received
 			filename = os.path.basename(filename)
 			with open(filename, "wb") as f:
 				while True:
@@ -113,7 +113,7 @@ while True:
 						break
 					f.write(bytes_read)
 			conn.close()
-			s.close()
+			print(f"File \"{filename}\" recieved from {addr}.")
 	elif "print" in user_input:
 		args = user_input.split()
 		if len(args) == 1:
