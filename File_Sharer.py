@@ -56,7 +56,6 @@ while True:
 				except ConnectionRefusedError:
 					print("Target IP / PORT were not listening")
 					continue
-				filesize = os.path.getsize(file_path)
 				s.send(f'{file_path}'.encode())
 				with open(file_path, "rb") as f:
 					while True:
